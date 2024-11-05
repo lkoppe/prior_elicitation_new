@@ -291,20 +291,19 @@ def burnin_phase(
     dict_copy = dict(global_dict)
 
     if global_dict["initialization_settings"]["method"] != "univariate":
-        # get number of hyperparameters
-        n_hypparam=0
-        param_names = set(global_dict["model_parameters"]).difference(["independence", "no_params"])
-        for param in param_names:
-            n_hypparam += len(global_dict["model_parameters"][param]["hyperparams_dict"].keys())
+        hyperparams = []
+        for param_details in global_dict["model_parameters"].values():
+            if isinstance(param_details, dict) and "hyperparams_dict" in param_details:
+                hyperparams.extend(param_details["hyperparams_dict"].values())
         # create initialization matrix
-        init_matrix = init_method(n_hypparam, 
-                                  dict_copy["initialization_settings"]["number_of_iterations"],
-                                  global_dict["initialization_settings"]["method"]
-                                  )
-    
+        init_matrix = init_method(hypparam = hyperparams,
+                                    n_warm_up = dict_copy["initialization_settings"]["number_of_iterations"],
+                                    method = global_dict["initialization_settings"]["method"],
+                                    )
         path=dict_copy["training_settings"]["output_path"] + "/initialization_matrix.pkl"
         save_as_pkl(init_matrix, path)
-    
+
+
     for i in range(dict_copy["initialization_settings"]["number_of_iterations"]):
         dict_copy["training_settings"]["seed"] = dict_copy["training_settings"]["seed"]+i
         if global_dict["initialization_settings"]["method"] != "univariate":

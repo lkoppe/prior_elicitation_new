@@ -8,6 +8,9 @@ from bayesflow import networks
 
 from elicit.functions.helper_functions import save_as_pkl
 
+from elicit.functions.sampling_functions import generate_samples, transform_samples_to_distribution
+import pprint
+
 tfd = tfp.distributions
 
 
@@ -120,16 +123,18 @@ def intialize_priors(global_dict, init_matrix_slice):
 
     return init_prior
 
-def init_method(n_hypparam, n_warm_up, method):
+def init_method(hypparam, n_warm_up : int, method : str):
     """
     Initialize multivariate normal prior over hyperparameter values
 
     Parameters
     ----------
-    n_hypparam : int
-        Number of hyperparameters.
+    hypparam : list
+        list of hyperparameter objects.
     n_warm_up : int
         number of warmup iterations.
+    method : str
+        initialization sampling method
 
     Returns
     -------
@@ -138,24 +143,17 @@ def init_method(n_hypparam, n_warm_up, method):
 
     """
     assert method in ["random", "lhs", "sobol"], "The initialization method must be one of the following: 'sobol', 'lhs', 'random'"
+
+    n_hypparam = len(hypparam)
+    print("Initialization Method: " + method, end= "\n\n")
+    print("Initialization Distribution Objects:", end="\n\n")
+    pprint.pprint(hypparam)
+    print()
     
-    if method == "random":
-        print("init_method=random")
-        mvdist = tfd.MultivariateNormalDiag(
-            tf.zeros(n_hypparam), 
-            tf.ones(n_hypparam)).sample(n_warm_up)
-    elif method == "lhs":
-        print("init_method=lhs")
-        mvdist = tfd.MultivariateNormalDiag(
-            tf.zeros(n_hypparam), 
-            tf.ones(n_hypparam)).sample(n_warm_up)
-    elif method == "sobol":
-        print("init_method=sobol")
-        mvdist = tfd.MultivariateNormalDiag(
-            tf.zeros(n_hypparam), 
-            tf.ones(n_hypparam)).sample(n_warm_up)
+    samples = generate_samples(n_samples=n_warm_up, d=n_hypparam, method=method)
+    mvdist = transform_samples_to_distribution(samples, hypparam)
         
-    return mvdist
+    return tf.convert_to_tensor(mvdist, dtype=tf.float32) # double tensor is needed   
 
 def sample_from_priors(initialized_priors, ground_truth, global_dict):
     """
