@@ -9,7 +9,6 @@ from bayesflow import networks
 from elicit.functions.helper_functions import save_as_pkl
 
 from elicit.functions.sampling_functions import generate_samples, transform_samples_to_distribution
-import pprint
 
 tfd = tfp.distributions
 
@@ -146,9 +145,6 @@ def init_method(hypparam, n_warm_up : int, method : str):
 
     n_hypparam = len(hypparam)
     print("Initialization Method: " + method, end= "\n\n")
-    print("Initialization Distribution Objects:", end="\n\n")
-    pprint.pprint(hypparam)
-    print()
     
     samples = generate_samples(n_samples=n_warm_up, d=n_hypparam, method=method)
     mvdist = transform_samples_to_distribution(samples, hypparam)
