@@ -57,6 +57,9 @@ def sgd_training(
     # create subdirectories for better readability
     dict_training = global_dict["training_settings"]
     dict_optimization = global_dict["optimization_settings"]
+    # save initiale hyperparameter values (before any updating took place)
+    if dict_training["method"] == "parametric_prior":
+        res_dict = save_hyperparameters(prior_model_init, 0, global_dict)
     for epoch in tf.range(dict_training["epochs"]):
         if epoch > 0:
             logging.disable(logging.INFO)
@@ -66,7 +69,6 @@ def sgd_training(
         get_optimizer = dict_optimization["optimizer"]
         args_optimizer = dict_optimization["optimizer_specs"]
         optimizer = get_optimizer(**args_optimizer)
-
         with tf.GradientTape() as tape:
             # generate simulations from model
             training_elicited_statistics = one_forward_simulation(
@@ -151,7 +153,7 @@ def sgd_training(
         if dict_training["method"] == "parametric_prior":
             # save single learned hyperparameter values for each prior and
             # epoch
-            res_dict = save_hyperparameters(prior_model, epoch, global_dict)
+            res_dict = save_hyperparameters(prior_model, 1, global_dict)
         else:
             # save mean and std for each sampled marginal prior; for each epoch
             path_model = saving_path + "/model_simulations.pkl"
